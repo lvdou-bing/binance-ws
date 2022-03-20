@@ -103,7 +103,7 @@ func getInitConnConf() *ConnConf {
 	}
 }
 
-func NewConnConf(url, key, secret string, maxRetry int) *ConnConf {
+func NewConnConf(url string, maxRetry int) *ConnConf {
 	if url == "" {
 		url = BaseUrl
 	}
