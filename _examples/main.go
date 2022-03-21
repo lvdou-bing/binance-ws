@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"os/signal"
@@ -30,12 +31,12 @@ func main() {
 
 	callKline := bnws.NewCallBack(func(msg *bnws.UpdateMsg) {
 		// parse the message to struct we need
-		// var order []bnws.SpotOrderMsg
-		// if err := json.Unmarshal(msg.Result, &order); err != nil {
-		// 	log.Printf("order Unmarshal err:%s", err.Error())
-		// }
-		// log.Printf("%+v", order)
+		var kline bnws.SpotKlineMsgPayload
+		if err := json.Unmarshal(msg.Data, &kline); err != nil {
+			log.Printf("order Unmarshal err:%s", err.Error())
+		}
 		log.Println(msg)
+		log.Printf("%+v", kline)
 	})
 	// callOrder := bnws.NewCallBack(func(msg *bnws.UpdateMsgRaw) {
 	// 	// parse the message to struct we need

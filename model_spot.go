@@ -1,5 +1,32 @@
 package bnws
 
+type SpotKlineMsgPayload struct {
+	StartTime            int64   `json:"t"` // 这根K线的起始时间
+	EndTime              int64   `json:"T"` // 这根K线的结束时间
+	Symbol               string  `json:"s"` // 交易对 大写
+	Interval             string  `json:"i"` // K线间隔
+	FirstTradeId         int64   `json:"f"` // 这根K线期间第一笔成交ID
+	LastTradeId          int64   `json:"L"` // 这根K线期间末一笔成交ID
+	OpenPrice            float64 `json:"o"` // 这根K线期间第一笔成交价
+	ClosePrice           float64 `json:"c"` // 这根K线期间末一笔成交价
+	HighestPrice         float64 `json:"h"` // 这根K线期间最高成交价
+	LowestPrice          float64 `json:"l"` // 这根K线期间最低成交价
+	VolumeOfAllTrades    float64 `json:"v"` // 这根K线期间成交量
+	NumberOfAllTrades    float64 `json:"n"` // 这根K线期间成交笔数
+	QuoteOfAllTrades     float64 `json:"q"` // 这根K线期间成交额
+	VolumeOfActiveTrades float64 `json:"V"` // 主动买入的成交量
+	QuoteOfActiveTrades  float64 `json:"Q"` // 主动买入的成交额
+	IsFinished           bool    `json:"x"` // 这根K线是否完结(是否已经开始下一根K线)
+	//   "B": "123456"   // 忽略此参数
+}
+
+// type SpotKlineMsg struct {
+// 	Event     string               `json:"e"` // 事件类型
+// 	EventTime int64                `json:"E"` // 事件时间
+// 	Symbol    string               `json:"s"` // 交易对 大写
+// 	Kline     *SpotKlineMsgPayload `json:"k"` // payload
+// }
+
 type SpotBalancesMsg struct {
 	Timestamp        string `json:"timestamp"`
 	TimestampInMilli string `json:"timestamp_ms"`
