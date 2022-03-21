@@ -28,7 +28,7 @@ func main() {
 
 	// create callback functions for receive messages
 
-	callKline := bnws.NewCallBack(func(msg *bnws.UpdateMsgRaw) {
+	callKline := bnws.NewCallBack(func(msg *bnws.UpdateMsg) {
 		// parse the message to struct we need
 		// var order []bnws.SpotOrderMsg
 		// if err := json.Unmarshal(msg.Result, &order); err != nil {
@@ -54,12 +54,12 @@ func main() {
 	// })
 
 	// first, we need set callback function
-	ws.SetCallBack(bnws.ChannelSpotKline, callKline)
+	ws.SetCallBack("btcusdt@kline_1m", callKline)
 	// ws.SetCallBack(bnws.ChannelSpotOrder, callOrder)
 	// ws.SetCallBack(bnws.ChannelSpotPublicTrade, callTrade)
 
 	// second, after set callback function, subscribe to any channel you are interested into
-	if err := ws.Subscribe(bnws.ChannelSpotKline, []string{"btcusdt@kline_1m"}); err != nil {
+	if err := ws.Subscribe("btcusdt@kline_1m"); err != nil {
 		log.Printf("Subscribe err:%s", err.Error())
 		return
 	}

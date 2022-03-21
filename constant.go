@@ -1,10 +1,7 @@
 package bnws
 
 const (
-	BaseUrl        = "wss://stream.binance.com:9443"
-	FuturesBtcUrl  = "wss://fx-ws.gateio.ws/v4/ws/btc"
-	FuturesUsdtUrl = "wss://fx-ws.gateio.ws/v4/ws/usdt"
-
+	BaseUrl          = "wss://stream.binance.com:9443/stream"
 	AuthMethodApiKey = "api_key"
 	MaxRetryConn     = 10
 )

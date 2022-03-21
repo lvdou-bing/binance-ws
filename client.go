@@ -5,11 +5,9 @@ import (
 	"crypto/tls"
 	"log"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
-	mapset "github.com/deckarep/golang-set"
 	"github.com/gorilla/websocket"
 )
 
@@ -103,7 +101,7 @@ func getInitConnConf() *ConnConf {
 	}
 }
 
-func NewConnConf(url string, maxRetry int) *ConnConf {
+func NewConnConf(url string, maxRetry int, skipTlsVerify bool) *ConnConf {
 	if url == "" {
 		url = BaseUrl
 	}
@@ -111,9 +109,10 @@ func NewConnConf(url string, maxRetry int) *ConnConf {
 		maxRetry = MaxRetryConn
 	}
 	return &ConnConf{
-		subscribeMsg: new(sync.Map),
-		MaxRetryConn: maxRetry,
-		URL:          url,
+		subscribeMsg:  new(sync.Map),
+		MaxRetryConn:  maxRetry,
+		URL:           url,
+		SkipTlsVerify: skipTlsVerify,
 	}
 }
 
@@ -125,10 +124,12 @@ func NewConnConfFromOption(op *ConfOptions) *ConnConf {
 	if op.MaxRetryConn == 0 {
 		op.MaxRetryConn = MaxRetryConn
 	}
+
 	return &ConnConf{
-		subscribeMsg: new(sync.Map),
-		MaxRetryConn: op.MaxRetryConn,
-		URL:          op.URL,
+		subscribeMsg:  new(sync.Map),
+		MaxRetryConn:  op.MaxRetryConn,
+		URL:           op.URL,
+		SkipTlsVerify: op.SkipTlsVerify,
 	}
 }
 
@@ -167,10 +168,10 @@ func (ws *WsService) reconnect() error {
 			} else {
 				req.op.IsReConnect = true
 			}
-			if err := ws.baseSubscribe(req.Event, req.Channel, req.Payload, req.op); err != nil {
-				ws.Logger.Printf("after reconnect, subscribe channel[%s] err:%s", key.(string), err.Error())
+			if err := ws.baseSubscribe(req.Event, req.Stream, req.op); err != nil {
+				ws.Logger.Printf("after reconnect, subscribe stream[%s] err:%s", key.(string), err.Error())
 			} else {
-				ws.Logger.Printf("reconnect channel[%s] with payload[%v] success", key.(string), req.Payload)
+				ws.Logger.Printf("reconnect stream[%s] success", key.(string))
 			}
 		}
 		return true
@@ -187,33 +188,25 @@ func (ws *WsService) GetMaxRetryConn() int {
 	return ws.conf.MaxRetryConn
 }
 
-func (ws *WsService) GetChannelMarkets(channel string) []string {
-	var markets []string
-	set := mapset.NewSet()
-	if v, ok := ws.conf.subscribeMsg.Load(channel); ok {
-		for _, req := range v.([]requestHistory) {
-			if req.Event == Subscribe {
-				for _, pl := range req.Payload {
-					if strings.Contains(pl, "_") {
-						set.Add(pl)
-					}
-				}
-			} else {
-				for _, pl := range req.Payload {
-					if strings.Contains(pl, "_") {
-						set.Remove(pl)
-					}
-				}
-			}
-		}
+// func (ws *WsService) GetChannelMarkets(channel string) []string {
+// 	var markets []string
+// 	set := mapset.NewSet()
+// 	if v, ok := ws.conf.subscribeMsg.Load(channel); ok {
+// 		for _, req := range v.([]requestHistory) {
+// 			if req.Event == Subscribe {
+// 				set.Add(req.Stream)
+// 			} else {
+// 				set.Remove(req.Stream)
+// 			}
+// 		}
 
-		for _, v := range set.ToSlice() {
-			markets = append(markets, v.(string))
-		}
-		return markets
-	}
-	return markets
-}
+// 		for _, v := range set.ToSlice() {
+// 			markets = append(markets, v.(string))
+// 		}
+// 		return markets
+// 	}
+// 	return markets
+// }
 
 func (ws *WsService) GetChannels() []string {
 	var channels []string

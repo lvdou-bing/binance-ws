@@ -5,15 +5,11 @@ import (
 )
 
 type UpdateMsg struct {
-	// Time    int64           `json:"time"`
-	// Id      *int64          `json:"id,omitempty"`
-	// Channel string          `json:"channel"`
-	Channel string `json:"e"`
-	// Error   *ServiceError   `json:"error,omitempty"`
-	// Result json.RawMessage `json:"result"`
+	Stream string          `json:"stream"`
+	Data   json.RawMessage `json:"data"`
 }
 
-type UpdateMsgRaw json.RawMessage
+// type UpdateMsgRaw json.RawMessage
 
 type ServiceError struct {
 	Code    int    `json:"code"`
@@ -54,8 +50,7 @@ type Auth struct {
 }
 
 type requestHistory struct {
-	Channel string   `json:"channel"`
-	Event   string   `json:"event"`
-	Payload []string `json:"payload"`
-	op      *SubscribeOptions
+	Stream string `json:"stream"`
+	Event  string `json:"event"`
+	op     *SubscribeOptions
 }

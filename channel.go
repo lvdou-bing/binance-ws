@@ -14,21 +14,21 @@ type SubscribeOptions struct {
 }
 
 /*
-@param channel string: the stream type
+@param stream string: the stream type
 @param payload []string: the list of detail stream message, e.g. <symbol>@type_<option>
 */
-func (ws *WsService) Subscribe(channel string, payload []string) error {
-	// if (ws.conf.Key == "" || ws.conf.Secret == "") && authChannel[channel] {
+func (ws *WsService) Subscribe(stream string) error {
+	// if (ws.conf.Key == "" || ws.conf.Secret == "") && authChannel[stream] {
 	// 	return newAuthEmptyErr()
 	// }
 
-	msgCh, ok := ws.msgChs.Load(channel)
+	msgCh, ok := ws.msgChs.Load(stream)
 	if !ok {
-		msgCh = make(chan *UpdateMsgRaw, 1)
-		go ws.receiveCallMsg(channel, msgCh.(chan *UpdateMsgRaw))
+		msgCh = make(chan *UpdateMsg, 1)
+		go ws.receiveCallMsg(stream, msgCh.(chan *UpdateMsg))
 	}
 
-	err := ws.newBaseChannel(channel, payload, msgCh.(chan *UpdateMsgRaw), nil)
+	err := ws.newBaseChannel(stream, msgCh.(chan *UpdateMsg), nil)
 	if err != nil {
 		return err
 	}
@@ -36,18 +36,18 @@ func (ws *WsService) Subscribe(channel string, payload []string) error {
 	return nil
 }
 
-func (ws *WsService) SubscribeWithOption(channel string, payload []string, op *SubscribeOptions) error {
-	// if (ws.conf.Key == "" || ws.conf.Secret == "") && authChannel[channel] {
+func (ws *WsService) SubscribeWithOption(stream string, op *SubscribeOptions) error {
+	// if (ws.conf.Key == "" || ws.conf.Secret == "") && authChannel[stream] {
 	// 	return newAuthEmptyErr()
 	// }
 
-	msgCh, ok := ws.msgChs.Load(channel)
+	msgCh, ok := ws.msgChs.Load(stream)
 	if !ok {
-		msgCh = make(chan *UpdateMsgRaw, 1)
-		go ws.receiveCallMsg(channel, msgCh.(chan *UpdateMsgRaw))
+		msgCh = make(chan *UpdateMsg, 1)
+		go ws.receiveCallMsg(stream, msgCh.(chan *UpdateMsg))
 	}
 
-	err := ws.newBaseChannel(channel, payload, msgCh.(chan *UpdateMsgRaw), op)
+	err := ws.newBaseChannel(stream, msgCh.(chan *UpdateMsg), op)
 	if err != nil {
 		return err
 	}
@@ -55,18 +55,18 @@ func (ws *WsService) SubscribeWithOption(channel string, payload []string, op *S
 	return nil
 }
 
-func (ws *WsService) UnSubscribe(channel string, payload []string) error {
-	return ws.baseSubscribe(UnSubscribe, channel, payload, nil)
+func (ws *WsService) UnSubscribe(stream string) error {
+	return ws.baseSubscribe(UnSubscribe, stream, nil)
 }
 
-func (ws *WsService) newBaseChannel(channel string, payload []string, bch chan *UpdateMsgRaw, op *SubscribeOptions) error {
-	err := ws.baseSubscribe(Subscribe, channel, payload, op)
+func (ws *WsService) newBaseChannel(stream string, bch chan *UpdateMsg, op *SubscribeOptions) error {
+	err := ws.baseSubscribe(Subscribe, stream, op)
 	if err != nil {
 		return err
 	}
 
-	if _, ok := ws.msgChs.Load(channel); !ok {
-		ws.msgChs.Store(channel, bch)
+	if _, ok := ws.msgChs.Load(stream); !ok {
+		ws.msgChs.Store(stream, bch)
 	}
 
 	ws.readMsg()
@@ -74,10 +74,10 @@ func (ws *WsService) newBaseChannel(channel string, payload []string, bch chan *
 	return nil
 }
 
-func (ws *WsService) baseSubscribe(event string, channel string, payload []string, op *SubscribeOptions) error {
+func (ws *WsService) baseSubscribe(event string, stream string, op *SubscribeOptions) error {
 	req := make(map[string]interface{})
 	req["method"] = event
-	req["params"] = payload
+	req["params"] = []interface{}{stream}
 	req["id"] = 1 // TODO, need a unique value
 
 	byteReq, err := json.Marshal(req)
@@ -92,22 +92,20 @@ func (ws *WsService) baseSubscribe(event string, channel string, payload []strin
 		return err
 	}
 
-	if v, ok := ws.conf.subscribeMsg.Load(channel); ok {
+	if v, ok := ws.conf.subscribeMsg.Load(stream); ok {
 		if op != nil && op.IsReConnect {
 			return nil
 		}
 		reqs := v.([]requestHistory)
 		reqs = append(reqs, requestHistory{
-			Channel: channel,
-			Event:   event,
-			Payload: payload,
+			Stream: stream,
+			Event:  event,
 		})
-		ws.conf.subscribeMsg.Store(channel, reqs)
+		ws.conf.subscribeMsg.Store(stream, reqs)
 	} else {
-		ws.conf.subscribeMsg.Store(channel, []requestHistory{{
-			Channel: channel,
-			Event:   event,
-			Payload: payload,
+		ws.conf.subscribeMsg.Store(stream, []requestHistory{{
+			Stream: stream,
+			Event:  event,
 		}})
 	}
 
@@ -151,8 +149,8 @@ func (ws *WsService) readMsg() {
 						continue
 					}
 
-					if bch, ok := ws.msgChs.Load(rawTrade.Channel); ok {
-						bch.(chan *UpdateMsgRaw) <- (*UpdateMsgRaw)(&message)
+					if bch, ok := ws.msgChs.Load(rawTrade.Stream); ok {
+						bch.(chan *UpdateMsg) <- &rawTrade
 					}
 				}
 			}
@@ -160,20 +158,20 @@ func (ws *WsService) readMsg() {
 	})
 }
 
-type callBack func(*UpdateMsgRaw)
+type callBack func(*UpdateMsg)
 
-func NewCallBack(f func(*UpdateMsgRaw)) func(*UpdateMsgRaw) {
+func NewCallBack(f func(*UpdateMsg)) func(*UpdateMsg) {
 	return f
 }
 
-func (ws *WsService) SetCallBack(channel string, call callBack) {
+func (ws *WsService) SetCallBack(stream string, call callBack) {
 	if call == nil {
 		return
 	}
-	ws.calls.Store(channel, call)
+	ws.calls.Store(stream, call)
 }
 
-func (ws *WsService) receiveCallMsg(channel string, msgCh chan *UpdateMsgRaw) {
+func (ws *WsService) receiveCallMsg(stream string, msgCh chan *UpdateMsg) {
 	defer close(msgCh)
 	for {
 		select {
@@ -181,7 +179,7 @@ func (ws *WsService) receiveCallMsg(channel string, msgCh chan *UpdateMsgRaw) {
 			ws.Logger.Printf("received parent context exit")
 			return
 		case msg := <-msgCh:
-			if call, ok := ws.calls.Load(channel); ok {
+			if call, ok := ws.calls.Load(stream); ok {
 				call.(callBack)(msg)
 			}
 		}
