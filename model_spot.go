@@ -92,13 +92,12 @@ type SpotMarginBalancesMsg struct {
 }
 
 type SpotBookTickerMsg struct {
-	TimeInMilli  int64  `json:"t"`
-	LastId       int64  `json:"u"`
-	CurrencyPair string `json:"s"`
-	Bid          string `json:"b"`
-	BidSize      string `json:"B"`
-	Ask          string `json:"a"`
-	AskSize      string `json:"A"`
+	UpdateId int64  `json:"u"`
+	Symbol   string `json:"s"`
+	Bid      string `json:"b"`
+	BidSize  string `json:"B"`
+	Ask      string `json:"a"`
+	AskSize  string `json:"A"`
 }
 
 type SpotTickerMsg struct {
