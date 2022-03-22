@@ -20,12 +20,12 @@ type SpotKlineMsgPayload struct {
 	//   "B": "123456"   // 忽略此参数
 }
 
-// type SpotKlineMsg struct {
-// 	Event     string               `json:"e"` // 事件类型
-// 	EventTime int64                `json:"E"` // 事件时间
-// 	Symbol    string               `json:"s"` // 交易对 大写
-// 	Kline     *SpotKlineMsgPayload `json:"k"` // payload
-// }
+type SpotKlineMsg struct {
+	Event     string               `json:"e"` // 事件类型
+	EventTime int64                `json:"E"` // 事件时间
+	Symbol    string               `json:"s"` // 交易对 大写
+	Kline     *SpotKlineMsgPayload `json:"k"` // payload
+}
 
 type SpotBalancesMsg struct {
 	Timestamp        string `json:"timestamp"`
