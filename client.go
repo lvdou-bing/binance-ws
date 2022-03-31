@@ -62,11 +62,11 @@ func NewWsService(ctx context.Context, logger *log.Logger, conf *ConnConf) (*WsS
 		c, _, err := dialer.Dial(cfg.URL, nil)
 		if err != nil {
 			if retry >= cfg.MaxRetryConn {
-				log.Printf("max reconnect time %d reached, give it up", cfg.MaxRetryConn)
+				logger.Printf("max reconnect time %d reached, give it up", cfg.MaxRetryConn)
 				return nil, err
 			}
 			retry++
-			log.Printf("failed to connect to server for the %d time, try again later", retry)
+			logger.Printf("failed to connect to server for the %d time, try again later", retry)
 			time.Sleep(time.Millisecond * (time.Duration(retry) * 500))
 			continue
 		} else {
@@ -76,7 +76,7 @@ func NewWsService(ctx context.Context, logger *log.Logger, conf *ConnConf) (*WsS
 	}
 
 	if retry > 0 {
-		log.Printf("reconnect succeeded after retrying %d times", retry)
+		logger.Printf("reconnect succeeded after retrying %d times", retry)
 	}
 
 	ws := &WsService{
@@ -148,7 +148,7 @@ func (ws *WsService) reconnect() error {
 				return err
 			}
 			retry++
-			log.Printf("failed to connect to server for the %d time, try again later", retry)
+			ws.Logger.Printf("failed to connect to server for the %d time, try again later", retry)
 			time.Sleep(time.Millisecond * (time.Duration(retry) * 500))
 			continue
 		} else {
