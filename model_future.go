@@ -31,6 +31,18 @@ type FuturesTicker struct {
 	QuantoBaseRate string `json:"quanto_base_rate,omitempty"`
 }
 
+type FuturesMiniTicker struct {
+	EventType         string  `json:"e"`
+	EventTime         int64   `json:"E"`
+	Symbol            string  `json:"s"`        // 交易对 大写
+	OpenPrice         float64 `json:"o,string"` // 这根K线期间第一笔成交价
+	ClosePrice        float64 `json:"c,string"` // 这根K线期间末一笔成交价
+	HighestPrice      float64 `json:"h,string"` // 这根K线期间最高成交价
+	LowestPrice       float64 `json:"l,string"` // 这根K线期间最低成交价
+	VolumeOfAllTrades float64 `json:"v,string"` // Total traded base asset volume
+	QuoteOfAllTrades  float64 `json:"q,string"` // Total traded quote asset volume
+}
+
 type FuturesTrade struct {
 	// Trade ID
 	Id int64 `json:"id,omitempty"`
